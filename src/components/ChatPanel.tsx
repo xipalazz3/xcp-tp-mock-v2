@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import type { ChatMessage, Customer } from '@/lib/types';
 import { Button } from '@/components/ui/Button';
+import { VoiceButton } from '@/components/VoiceButton';
 import { cn, fmtTime, uid, jitter } from '@/lib/utils';
 import { useAppStore } from '@/store/useAppStore';
 import { useVerticalResize } from '@/hooks/useVerticalResize';
@@ -21,11 +22,12 @@ const MAX_HEIGHT = 640;
 const COLLAPSED_HEIGHT = 40;
 
 const MOCK_RESPONSES = [
-  'Based on the comparable set, the tested party\'s operating margin of 7.0% falls within the interquartile range. No adjustment is warranted.',
-  'I\'ve reviewed the functional analysis. The entity performs routine distribution functions with limited risk, consistent with the TNMM application.',
-  'The comparable search yielded 8 companies in the same industry segment. Three were rejected due to insufficient independence. The remaining set shows a healthy IQR of 5.1%–8.3%.',
-  'Looking at the prior year comparison, all tested transactions remained within arm\'s length range. The margin movement is directionally consistent with market trends.',
-  'I can run a new comparable search with tighter SIC code filters if needed. Would you like me to narrow the industry classification?',
+  'Based on the comparable set, the tested party\'s operating margin of 8.42% falls within the full range (2.50%–19.23%) and above the interquartile range (4.22%–9.86%). No adjustment is warranted — minimum TP risk.',
+  'I\'ve reviewed the functional analysis. The entity performs value-added distribution functions including after-sales service, installation, and local marketing, consistent with the TNMM application using Operating Margin as PLI.',
+  'The comparable search yielded 17 companies in Australia. The five-year weighted average IQR is 4.22%–9.86% with a median of 5.57%. Three companies were rejected due to insufficient independence (<50% ownership threshold).',
+  'Looking at the prior year comparison, all tested transactions remained within arm\'s length range. The margin movement is directionally consistent with market trends in the Australian industrial distribution sector.',
+  'I can run a new comparable search with tighter SIC code filters if needed. Would you like me to narrow the industry classification or adjust the independence threshold?',
+  'The scenario simulation shows that if the tested party\'s OM drops to 3.8% (below Q1 of 4.22%), a potential transfer pricing adjustment of approximately AUD 340K would be required to bring margins to the median of 5.57%.',
 ];
 
 export function ChatPanel({ customer }: { customer: Customer }) {
@@ -79,7 +81,6 @@ export function ChatPanel({ customer }: { customer: Customer }) {
     setInput('');
     setStreaming('');
 
-    // Simulate streaming response
     await jitter(600, 1200);
     const response = MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)];
     let accumulated = '';
@@ -113,7 +114,10 @@ export function ChatPanel({ customer }: { customer: Customer }) {
       >
         <div className="flex min-w-0 items-center gap-2">
           <MessageSquare className="h-4 w-4 shrink-0 text-primary" />
-          <span className="shrink-0 text-sm font-semibold">Agent chat</span>
+          <span className="shrink-0 text-sm font-semibold">Agent Chat</span>
+          <div onClick={(e) => e.stopPropagation()}>
+            <VoiceButton />
+          </div>
           <span className="truncate text-[11px] text-muted-fg">
             · {activeSession ? activeSession.title : customer.name} · {messages.length} message{messages.length === 1 ? '' : 's'}
           </span>
@@ -147,7 +151,7 @@ export function ChatPanel({ customer }: { customer: Customer }) {
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-2">
             {messages.length === 0 && !busy && (
               <div className="pt-4 text-center text-xs text-muted-fg">
-                Ask the agent to revise a section, explain a finding, or run tools.
+                Ask the agent to revise a section, explain a finding, or run tools. Use the mic for voice interaction via Nova Sonic 2.
               </div>
             )}
             <ul className="space-y-2">

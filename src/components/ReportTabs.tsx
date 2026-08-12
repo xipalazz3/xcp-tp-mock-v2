@@ -1,20 +1,16 @@
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
 import { CompSearchPanel } from '@/components/CompSearchPanel';
+import { ScenarioSimulation } from '@/components/ScenarioSimulation';
+import { Button } from '@/components/ui/Button';
 import { cn, fmtTime } from '@/lib/utils';
+import { FileText, Upload, Download } from 'lucide-react';
 import type {
-  AppendicesOutput,
-  BioOutput,
-  Customer,
-  EconomicsOutput,
-  EntityData,
-  ExecSummaryOutput,
-  RegulationsOutput,
-  ReportOutput,
-  TransactionalOutput,
+  AppendicesOutput, BioOutput, Customer, EconomicsOutput, EntityData,
+  ExecSummaryOutput, RegulationsOutput, ReportOutput, TransactionalOutput,
 } from '@/lib/types';
 
-const money = (n: number) =>
-  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const money = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
 export function ReportTabs({ customer }: { customer: Customer }) {
   const fetch = customer.steps.fetch.output as EntityData | undefined;
@@ -25,6 +21,8 @@ export function ReportTabs({ customer }: { customer: Customer }) {
   const regs = customer.steps.regulations.output as RegulationsOutput | undefined;
   const exec = customer.steps.execsum.output as ExecSummaryOutput | undefined;
   const report = customer.steps.report.output as ReportOutput | undefined;
+
+  const [showTemplateOptions, setShowTemplateOptions] = useState(false);
 
   return (
     <Tabs defaultValue="economics" className="mt-2">
@@ -43,9 +41,7 @@ export function ReportTabs({ customer }: { customer: Customer }) {
         {exec ? (
           <div className="text-sm">
             <p className="leading-relaxed">{exec.summary}</p>
-            <ul className="mt-3 list-disc pl-5 space-y-1">
-              {exec.keyFindings.map((f, i) => <li key={i}>{f}</li>)}
-            </ul>
+            <ul className="mt-3 list-disc pl-5 space-y-1">{exec.keyFindings.map((f, i) => <li key={i}>{f}</li>)}</ul>
           </div>
         ) : <Empty />}
       </TabsContent>
@@ -79,10 +75,7 @@ export function ReportTabs({ customer }: { customer: Customer }) {
             </div>
             <div className="mt-4">
               <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-fg">Transactions</div>
-              <Table
-                headers={['ID', 'Type', 'Counterparty', 'Amount']}
-                rows={fetch.transactions.map((t) => [t.id, t.type, t.counterparty, money(t.amountUsd)])}
-              />
+              <Table headers={['ID', 'Type', 'Counterparty', 'Amount']} rows={fetch.transactions.map((t) => [t.id, t.type, t.counterparty, money(t.amountUsd)])} />
             </div>
           </div>
         ) : <Empty />}
@@ -92,30 +85,65 @@ export function ReportTabs({ customer }: { customer: Customer }) {
         {tx ? (
           <Table
             headers={['ID', 'Type', 'Tested Party', 'Method', 'PLI', 'Range', 'Tested', 'Conclusion']}
-            rows={tx.transactions.map((t) => [
-              t.id, t.type, t.testedParty, t.method, t.pli,
-              `${t.range.low}% – ${t.range.high}%`,
-              `${t.tested.toFixed(2)}%`,
-              t.conclusion,
-            ])}
+            rows={tx.transactions.map((t) => [t.id, t.type, t.testedParty, t.method, t.pli, `${t.range.low}%–${t.range.high}%`, `${t.tested.toFixed(2)}%`, t.conclusion])}
           />
         ) : <Empty />}
       </TabsContent>
 
+      {/* ECONOMIC ANALYSIS — enhanced with verbiage */}
       <TabsContent value="economics">
-        <CompSearchPanel customer={customer} />
-        {econ && (
-          <div className="mt-6 text-sm">
-            <div className="mb-2 text-xs font-semibold uppercase text-muted-fg">Pipeline Economics Output</div>
-            <div className="mb-3">
-              Interquartile range: <strong>{econ.iqr.q1}% – {econ.iqr.q3}%</strong> (median {econ.iqr.median}%)
+        <div className="space-y-6">
+          {/* Method description per Alimak example */}
+          <div className="rounded-md border border-border bg-muted/30 p-4 text-xs leading-relaxed">
+            <h3 className="mb-2 text-sm font-semibold">Method Applied: Transactional Net Margin Method (TNMM)</h3>
+            <p className="mb-2">
+              The TNMM was selected as the most appropriate method based on the availability of reliable data and because comparable
+              uncontrolled transactions with which to apply the transactional methods could not be identified reliably. Independent companies
+              with similar functions to those of the tested party were reliably identified.
+            </p>
+            <h4 className="mb-1 font-semibold">Tested Party Selection</h4>
+            <p className="mb-2">
+              When applying a profit based analysis, a tested party is selected based on one of the entities involved in the controlled
+              transaction. The tested party is usually the participant for which profit level indicators (PLIs) can be obtained most reliably
+              and for which reliable data on comparable companies can be found. The tested party should not hold any valuable, non-routine
+              intangibles, and should be the least complex entity in the relationship.
+            </p>
+            <div className="mt-2 rounded border border-border bg-white p-2">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                <div><span className="text-muted-fg">Entity Name:</span> {customer.name}</div>
+                <div><span className="text-muted-fg">Tested Segment:</span> Division</div>
+                <div><span className="text-muted-fg">Primary Function:</span> Value-Added Distributor</div>
+                <div><span className="text-muted-fg">PLI:</span> Operating Margin (OM)</div>
+                <div><span className="text-muted-fg">Country:</span> {customer.jurisdiction}</div>
+                <div><span className="text-muted-fg">Fiscal Year:</span> FY {customer.fiscalYear}</div>
+              </div>
             </div>
-            <Table
-              headers={['Name', 'Country', 'Industry', 'PLI']}
-              rows={econ.comparables.map((c) => [c.name, c.country, c.industry, `${c.pli}%`])}
-            />
+            <h4 className="mb-1 mt-3 font-semibold">Comparable Taxpayer Search</h4>
+            <p>
+              To determine the arm's length nature of the controlled transactions, a search for independent taxpayers was conducted to identify
+              comparable companies engaged in similar activities. The search was limited to companies in {customer.jurisdiction} that are not at
+              least 50% owned by another company, with operating income available for the relevant period, and functionally comparable based on
+              SIC codes and qualitative review. The comparable company search is consistent with Paragraph 3.82 of the OECD Transfer Pricing Guidelines.
+            </p>
           </div>
-        )}
+
+          {/* Pipeline economics result */}
+          {econ && (
+            <div className="rounded-md border border-border p-3">
+              <div className="mb-2 text-xs font-semibold">Pipeline Economics Result — Interquartile Range</div>
+              <div className="mb-2 text-sm">
+                IQR: <strong>{econ.iqr.q1}% – {econ.iqr.q3}%</strong> (median {econ.iqr.median}%)
+              </div>
+              <Table headers={['Name', 'Country', 'Industry', 'PLI (%)']} rows={econ.comparables.map((c) => [c.name, c.country, c.industry, `${c.pli}%`])} />
+            </div>
+          )}
+
+          {/* Comp search panel */}
+          <CompSearchPanel customer={customer} />
+
+          {/* Scenario Simulation */}
+          <ScenarioSimulation customer={customer} />
+        </div>
       </TabsContent>
 
       <TabsContent value="regulations">
@@ -136,53 +164,74 @@ export function ReportTabs({ customer }: { customer: Customer }) {
 
       <TabsContent value="appendices">
         {appx ? (
-          <ul className="space-y-2 text-sm">
-            {appx.items.map((a) => (
-              <li key={a.title} className="rounded-md border border-border p-3">
-                <div className="font-semibold">{a.title}</div>
-                <div className="mt-1 text-muted-fg">{a.body}</div>
-              </li>
-            ))}
-          </ul>
+          <ul className="space-y-2 text-sm">{appx.items.map((a) => (
+            <li key={a.title} className="rounded-md border border-border p-3">
+              <div className="font-semibold">{a.title}</div><div className="mt-1 text-muted-fg">{a.body}</div>
+            </li>
+          ))}</ul>
         ) : <Empty />}
       </TabsContent>
 
+      {/* REPORT TAB with template populate */}
       <TabsContent value="report">
-        {report ? (
-          <div className="max-h-[60vh] overflow-y-auto rounded-md border border-border p-4">
-            <pre className="whitespace-pre-wrap text-xs leading-relaxed">{report.markdown}</pre>
+        <div className="space-y-4">
+          {/* Populate Report to Template */}
+          <div className="flex items-center gap-3 rounded-md border border-border bg-muted/30 p-3">
+            <FileText className="h-5 w-5 text-primary" />
+            <div className="flex-1">
+              <div className="text-sm font-semibold">Populate Report to Template</div>
+              <div className="text-[11px] text-muted-fg">Generate a full TP documentation report using a template structure</div>
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => setShowTemplateOptions(!showTemplateOptions)}>
+                <Download className="h-3.5 w-3.5" />
+                Use Default Template
+              </Button>
+              <Button size="sm" variant="outline">
+                <Upload className="h-3.5 w-3.5" />
+                Upload Template
+              </Button>
+            </div>
           </div>
-        ) : <Empty />}
+
+          {showTemplateOptions && (
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs">
+              <div className="mb-2 font-semibold text-blue-900">Default Template Structure (based on Alimak TP Documentation)</div>
+              <ol className="list-decimal pl-4 space-y-0.5 text-blue-800">
+                <li>Compliance Overview — Local regulations, penalties, documentation requirements</li>
+                <li>Local Documentation Index — Key questions (TR 2014/8), RAP requirements (s284-255)</li>
+                <li>Executive Summary — Scope, transactions, conclusions</li>
+                <li>Legal Entity Overview — Org chart, entity mapping, statement of facts</li>
+                <li>Controlled Transaction Overview — FAR analysis, comparability, service validation</li>
+                <li>Method Evaluation — TNMM selection, methods not applied</li>
+                <li>Application of s815-130 — Form vs substance, exceptions analysis</li>
+                <li>Profit Based Analysis — Tested party, search process, comparable set, IQR, conclusion</li>
+                <li>Reasonably Arguable Position — RAP conclusion per s284-255</li>
+                <li>Appendices — Comparable descriptions, financials, rejection matrix</li>
+              </ol>
+              <Button size="sm" className="mt-3">Generate Report from Template</Button>
+            </div>
+          )}
+
+          {report ? (
+            <div className="max-h-[60vh] overflow-y-auto rounded-md border border-border p-4">
+              <pre className="whitespace-pre-wrap text-xs leading-relaxed">{report.markdown}</pre>
+            </div>
+          ) : <Empty />}
+        </div>
       </TabsContent>
     </Tabs>
   );
 }
 
-function Empty() {
-  return <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-fg">Not run yet.</div>;
-}
-
-function KV({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-[11px] uppercase tracking-wide text-muted-fg">{label}</div>
-      <div className="text-sm">{value}</div>
-    </div>
-  );
-}
-
+function Empty() { return <div className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-fg">Not run yet.</div>; }
+function KV({ label, value }: { label: string; value: string }) { return <div><div className="text-[11px] uppercase tracking-wide text-muted-fg">{label}</div><div className="text-sm">{value}</div></div>; }
 function Table({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
   return (
     <div className="overflow-x-auto rounded-md border border-border">
       <table className="w-full text-xs">
-        <thead className="bg-muted text-muted-fg">
-          <tr>{headers.map((h) => <th key={h} className="px-2 py-1.5 text-left font-medium">{h}</th>)}</tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i} className="border-t border-border">{r.map((cell, j) => <td key={j} className="px-2 py-1.5">{String(cell)}</td>)}</tr>
-          ))}
-        </tbody>
+        <thead className="bg-muted text-muted-fg"><tr>{headers.map((h) => <th key={h} className="px-2 py-1.5 text-left font-medium">{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={i} className="border-t border-border">{r.map((cell, j) => <td key={j} className="px-2 py-1.5">{String(cell)}</td>)}</tr>)}</tbody>
       </table>
     </div>
   );
