@@ -21,24 +21,20 @@ export function ScenarioSimulation({ customer }: Props) {
   const adjustmentAmount = Math.round((shortfall / 100) * mockRevenue);
 
   return (
-    <div className="rounded-md border border-amber-200 bg-amber-50/50 p-4">
+    <div>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Calculator className="h-4 w-4 text-amber-700" />
-          <span className="text-sm font-semibold text-amber-900">Scenario Simulation</span>
-        </div>
+        <p className="text-[11px] text-muted-fg">
+          Simulate scenarios where the tested party's financial ratios fall outside the arm's length range to understand potential tax implications.
+        </p>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowSimulation(!showSimulation)}
           className="text-[11px]"
         >
-          {showSimulation ? 'Hide' : 'What if margin falls outside range?'}
+          {showSimulation ? 'Hide Simulation' : 'Run Simulation'}
         </Button>
       </div>
-      <p className="mt-1 text-[11px] text-amber-800">
-        Simulate scenarios where the tested party's financial ratios fall outside the arm's length range to understand potential tax implications.
-      </p>
 
       {showSimulation && (
         <div className="mt-3 space-y-3">

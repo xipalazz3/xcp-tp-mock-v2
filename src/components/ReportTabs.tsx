@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs';
-import { CompSearchPanel } from '@/components/CompSearchPanel';
-import { ScenarioSimulation } from '@/components/ScenarioSimulation';
+import { EconomicAnalysisTab } from '@/components/EconomicAnalysisTab';
 import { Button } from '@/components/ui/Button';
-import { cn, fmtTime } from '@/lib/utils';
 import { FileText, Upload, Download } from 'lucide-react';
 import type {
   AppendicesOutput, BioOutput, Customer, EconomicsOutput, EntityData,
@@ -90,60 +88,9 @@ export function ReportTabs({ customer }: { customer: Customer }) {
         ) : <Empty />}
       </TabsContent>
 
-      {/* ECONOMIC ANALYSIS — enhanced with verbiage */}
+      {/* Economic Analysis — full custom component */}
       <TabsContent value="economics">
-        <div className="space-y-6">
-          {/* Method description per Alimak example */}
-          <div className="rounded-md border border-border bg-muted/30 p-4 text-xs leading-relaxed">
-            <h3 className="mb-2 text-sm font-semibold">Method Applied: Transactional Net Margin Method (TNMM)</h3>
-            <p className="mb-2">
-              The TNMM was selected as the most appropriate method based on the availability of reliable data and because comparable
-              uncontrolled transactions with which to apply the transactional methods could not be identified reliably. Independent companies
-              with similar functions to those of the tested party were reliably identified.
-            </p>
-            <h4 className="mb-1 font-semibold">Tested Party Selection</h4>
-            <p className="mb-2">
-              When applying a profit based analysis, a tested party is selected based on one of the entities involved in the controlled
-              transaction. The tested party is usually the participant for which profit level indicators (PLIs) can be obtained most reliably
-              and for which reliable data on comparable companies can be found. The tested party should not hold any valuable, non-routine
-              intangibles, and should be the least complex entity in the relationship.
-            </p>
-            <div className="mt-2 rounded border border-border bg-white p-2">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                <div><span className="text-muted-fg">Entity Name:</span> {customer.name}</div>
-                <div><span className="text-muted-fg">Tested Segment:</span> Division</div>
-                <div><span className="text-muted-fg">Primary Function:</span> Value-Added Distributor</div>
-                <div><span className="text-muted-fg">PLI:</span> Operating Margin (OM)</div>
-                <div><span className="text-muted-fg">Country:</span> {customer.jurisdiction}</div>
-                <div><span className="text-muted-fg">Fiscal Year:</span> FY {customer.fiscalYear}</div>
-              </div>
-            </div>
-            <h4 className="mb-1 mt-3 font-semibold">Comparable Taxpayer Search</h4>
-            <p>
-              To determine the arm's length nature of the controlled transactions, a search for independent taxpayers was conducted to identify
-              comparable companies engaged in similar activities. The search was limited to companies in {customer.jurisdiction} that are not at
-              least 50% owned by another company, with operating income available for the relevant period, and functionally comparable based on
-              SIC codes and qualitative review. The comparable company search is consistent with Paragraph 3.82 of the OECD Transfer Pricing Guidelines.
-            </p>
-          </div>
-
-          {/* Pipeline economics result */}
-          {econ && (
-            <div className="rounded-md border border-border p-3">
-              <div className="mb-2 text-xs font-semibold">Pipeline Economics Result — Interquartile Range</div>
-              <div className="mb-2 text-sm">
-                IQR: <strong>{econ.iqr.q1}% – {econ.iqr.q3}%</strong> (median {econ.iqr.median}%)
-              </div>
-              <Table headers={['Name', 'Country', 'Industry', 'PLI (%)']} rows={econ.comparables.map((c) => [c.name, c.country, c.industry, `${c.pli}%`])} />
-            </div>
-          )}
-
-          {/* Comp search panel */}
-          <CompSearchPanel customer={customer} />
-
-          {/* Scenario Simulation */}
-          <ScenarioSimulation customer={customer} />
-        </div>
+        <EconomicAnalysisTab customer={customer} />
       </TabsContent>
 
       <TabsContent value="regulations">
@@ -172,10 +119,9 @@ export function ReportTabs({ customer }: { customer: Customer }) {
         ) : <Empty />}
       </TabsContent>
 
-      {/* REPORT TAB with template populate */}
+      {/* Report tab with template populate */}
       <TabsContent value="report">
         <div className="space-y-4">
-          {/* Populate Report to Template */}
           <div className="flex items-center gap-3 rounded-md border border-border bg-muted/30 p-3">
             <FileText className="h-5 w-5 text-primary" />
             <div className="flex-1">
