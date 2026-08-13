@@ -219,7 +219,8 @@ export function EconomicAnalysisTab({ customer }: { customer: Customer }) {
 
       {/* 4. Rejected Comparable Companies */}
       <CollapsibleSection title="Rejected Comparable Companies" defaultOpen={false} badge={<span className="ml-2 text-[10px] text-muted-fg">{REJECTED_COMP_LIST.length} companies</span>}>
-        <CompTable comps={REJECTED_COMP_LIST} verdicts={{}} expandedComp={expandedComp} onToggleExpand={(n) => setExpandedComp(expandedComp === n ? null : n)} onToggleVerdict={() => {}} type="rejected" />
+        <p className="mb-2 text-[11px] text-muted-fg">Review rejected companies — override the rejection verdict to move a company back into the accepted set.</p>
+        <CompTable comps={REJECTED_COMP_LIST} verdicts={verdicts} expandedComp={expandedComp} onToggleExpand={(n) => setExpandedComp(expandedComp === n ? null : n)} onToggleVerdict={toggleVerdict} type="rejected" />
       </CollapsibleSection>
 
       {/* 5. Similar Prior Comp Lists */}
@@ -335,7 +336,7 @@ function CompTable({ comps, verdicts, expandedComp, onToggleExpand, onToggleVerd
             <th className="px-2 py-2 text-right font-medium">Revenue 2024</th>
             <th className="px-2 py-2 text-right font-medium">Revenue 2023</th>
             <th className="px-2 py-2 text-left font-medium">{type === 'accepted' ? 'Acceptance Reason' : 'Rejection Reason'}</th>
-            {type === 'accepted' && <th className="px-2 py-2 text-center font-medium">Verdict</th>}
+            <th className="px-2 py-2 text-center font-medium">Verdict</th>
           </tr>
         </thead>
         <tbody>
@@ -352,18 +353,16 @@ function CompTable({ comps, verdicts, expandedComp, onToggleExpand, onToggleVerd
                   <td className="px-2 py-1.5 text-right tabular-nums">{(c.rev2024 / 1_000_000).toFixed(1)}M</td>
                   <td className="px-2 py-1.5 text-right tabular-nums">{(c.rev2023 / 1_000_000).toFixed(1)}M</td>
                   <td className="px-2 py-1.5 max-w-[220px] truncate text-muted-fg" title={reason}>{reason}</td>
-                  {type === 'accepted' && (
-                    <td className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => onToggleVerdict(c.name, 'accept')} className={cn('rounded p-0.5', v === 'accept' ? 'bg-green-200 text-green-800' : 'text-muted-fg hover:bg-green-100')}><CheckCircle2 className="h-3.5 w-3.5" /></button>
-                        <button onClick={() => onToggleVerdict(c.name, 'reject')} className={cn('rounded p-0.5', v === 'reject' ? 'bg-red-200 text-red-800' : 'text-muted-fg hover:bg-red-100')}><XCircle className="h-3.5 w-3.5" /></button>
-                      </div>
-                    </td>
-                  )}
+                  <td className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-1">
+                      <button onClick={() => onToggleVerdict(c.name, 'accept')} className={cn('rounded p-0.5', v === 'accept' ? 'bg-green-200 text-green-800' : 'text-muted-fg hover:bg-green-100')}><CheckCircle2 className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => onToggleVerdict(c.name, 'reject')} className={cn('rounded p-0.5', v === 'reject' ? 'bg-red-200 text-red-800' : 'text-muted-fg hover:bg-red-100')}><XCircle className="h-3.5 w-3.5" /></button>
+                    </div>
+                  </td>
                 </tr>
                 {isExpanded && (
                   <tr key={`${c.name}-detail`} className="border-t border-blue-100 bg-blue-50/60">
-                    <td colSpan={type === 'accepted' ? 7 : 6} className="px-4 py-3">
+                    <td colSpan={7} className="px-4 py-3">
                       <div className="grid grid-cols-2 gap-4 text-[10px] leading-relaxed">
                         <div><div className="mb-0.5 font-bold text-muted-fg uppercase text-[9px] tracking-wide">Characteristics of Property/Services</div>{c.characteristics}</div>
                         <div><div className="mb-0.5 font-bold text-muted-fg uppercase text-[9px] tracking-wide">Functional Analysis & Characterization</div>{c.functionalAnalysis}</div>
