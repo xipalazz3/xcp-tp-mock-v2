@@ -1,5 +1,5 @@
 import { useAppStore } from '@/store/useAppStore';
-import { Sparkles, Play, Loader2, Search, CalendarClock } from 'lucide-react';
+import { Sparkles, Play, Loader2, Search, CalendarClock, FlaskConical } from 'lucide-react';
 import { STEP_LABEL, STEP_ORDER } from '@/lib/types';
 import type { StepId } from '@/lib/types';
 
@@ -28,11 +28,10 @@ export function RightRail() {
         <div className="text-sm font-semibold">Skills & Tools</div>
       </div>
       <div className="px-3 pt-1 text-[11px] text-muted-fg">
-        Run pipeline steps or on-demand tools for the selected customer.
+        Run pipeline steps or tools for the selected customer.
       </div>
 
       <div className="flex-1 overflow-y-auto p-3">
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-fg">Pipeline Steps</div>
         <div className="space-y-1">
           {STEP_ORDER.map((step) => {
             const s = selected?.steps[step];
@@ -46,12 +45,6 @@ export function RightRail() {
               />
             );
           })}
-        </div>
-
-        <div className="my-3 border-t border-border" />
-
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-fg">On-Demand Tools</div>
-        <div className="space-y-1">
           <SkillButton
             label="Search Prior Comp List"
             running={false}
@@ -77,7 +70,7 @@ export function RightRail() {
             label="Scenario Simulation"
             running={false}
             disabled={disabled}
-            icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}
+            icon={<FlaskConical className="h-3.5 w-3.5 text-primary" />}
             highlight
           />
         </div>
