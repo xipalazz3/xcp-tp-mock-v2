@@ -10,7 +10,7 @@ import type {
 
 const money = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-export function ReportTabs({ customer }: { customer: Customer }) {
+export function ReportTabs({ customer, activeTab, onTabChange }: { customer: Customer; activeTab?: string; onTabChange?: (tab: string) => void }) {
   const fetch = customer.steps.fetch.output as EntityData | undefined;
   const bio = customer.steps.bio.output as BioOutput | undefined;
   const tx = customer.steps.transactional.output as TransactionalOutput | undefined;
@@ -23,7 +23,7 @@ export function ReportTabs({ customer }: { customer: Customer }) {
   const [showTemplateOptions, setShowTemplateOptions] = useState(false);
 
   return (
-    <Tabs defaultValue="economics" className="mt-2">
+    <Tabs value={activeTab ?? 'economics'} onValueChange={onTabChange} className="mt-2">
       <TabsList>
         <TabsTrigger value="execsum">Exec Summary</TabsTrigger>
         <TabsTrigger value="bio">Company Bio</TabsTrigger>

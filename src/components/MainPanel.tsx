@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/Button';
 import { StatusBadge } from '@/components/ui/Badge';
@@ -9,6 +10,7 @@ import { fmtTime } from '@/lib/utils';
 export function MainPanel() {
   const selected = useAppStore((s) => s.customers.find((c) => c.id === s.selectedId));
   const setReviewStatus = useAppStore((s) => s.setReviewStatus);
+  const [activeTab, setActiveTab] = useState('economics');
 
   if (!selected) {
     return (
@@ -31,10 +33,10 @@ export function MainPanel() {
       </header>
 
       <div className="flex-1 overflow-y-auto px-6 py-4">
-        <ReportTabs customer={selected} />
+        <ReportTabs customer={selected} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
-      <ChatPanel customer={selected} />
+      <ChatPanel customer={selected} onNavigate={setActiveTab} />
 
       <footer className="flex items-center justify-end gap-2 border-t border-border bg-white px-6 py-3">
         <Button variant="outline" onClick={() => setReviewStatus(selected.id, 'sent_back')}>

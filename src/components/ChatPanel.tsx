@@ -30,7 +30,63 @@ const MOCK_RESPONSES = [
   'The scenario simulation shows that if the tested party\'s OM drops to 3.8% (below Q1 of 4.22%), a potential transfer pricing adjustment of approximately AUD 340K would be required to bring margins to the median of 5.57%.',
 ];
 
-export function ChatPanel({ customer }: { customer: Customer }) {
+/** Generate a customer-specific summary with hyperlinks */
+function buildSummary(customer: Customer) {
+  const name = customer.name;
+  const juris = customer.jurisdiction;
+  const fy = customer.fiscalYear;
+  return {
+    greeting: `Report summary for ${name} (${juris}, FY ${fy}):`,
+    sections: [
+      {
+        label: 'Tested Party Profile',
+        text: `${name} is characterized as a value-added distributor performing local sales, marketing, after-sales service, and warehousing. Selected as the tested party under TNMM with Operating Margin as PLI.`,
+        link: 'economics',
+        linkLabel: 'View Economic Analysis →',
+      },
+      {
+        label: 'Comparable Search Result',
+        text: `8 accepted comparables identified in ${juris}. Five-year weighted average IQR: 4.22%–9.86% (median 5.57%). 7 companies rejected (ownership, losses, dissimilar function).`,
+        link: 'economics',
+        linkLabel: 'View Comp List →',
+      },
+      {
+        label: 'Similar Prior Analyses Found',
+        text: `3 existing analyses match this profile (95%, 78%, 65% similarity). Includes reusable paragraphs for tested party characterization, method selection, and RAP conclusion.`,
+        link: 'economics',
+        linkLabel: 'View Similar Analyses →',
+      },
+      {
+        label: 'Transactions',
+        text: `3 intercompany transactions tested. All fall within arm's length range — no adjustment required. Method: TNMM (distribution), TNMM (services), CUP (financing).`,
+        link: 'transactional',
+        linkLabel: 'View Transactional Analysis →',
+      },
+    ],
+    attentionItems: [
+      {
+        text: `Operating margin (8.42%) is above the IQR median — consider documenting rationale if margin is volatile year-over-year.`,
+        severity: 'info' as const,
+        link: 'economics',
+        linkLabel: 'Scenario Simulation →',
+      },
+      {
+        text: `7 rejected comparables include 3 companies with >50% ownership that may warrant a second look if independence criteria are relaxed.`,
+        severity: 'warning' as const,
+        link: 'economics',
+        linkLabel: 'View Rejected List →',
+      },
+      {
+        text: `Report template not yet generated — populate from default template or upload a custom one.`,
+        severity: 'action' as const,
+        link: 'report',
+        linkLabel: 'Generate Report →',
+      },
+    ],
+  };
+}
+
+export function ChatPanel({ customer, onNavigate }: { customer: Customer; onNavigate?: (tab: string) => void }) {
   const [open, setOpen] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -103,6 +159,13 @@ export function ChatPanel({ customer }: { customer: Customer }) {
     setBusy(false);
   };
 
+  const handleLinkClick = (tab: string) => {
+    onNavigate?.(tab);
+  };
+
+  const summary = buildSummary(customer);
+  const showSummary = messages.length === 0 && !busy;
+
   return (
     <section
       className="relative flex flex-col border-t border-border bg-white"
@@ -149,11 +212,80 @@ export function ChatPanel({ customer }: { customer: Customer }) {
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-2">
-            {messages.length === 0 && !busy && (
-              <div className="pt-4 text-center text-xs text-muted-fg">
-                Ask the agent to revise a section, explain a finding, or run tools. Use the mic for voice interaction via Nova Sonic 2.
+            {/* Pre-populated summary when no messages */}
+            {showSummary && (
+              <div className="space-y-3">
+                {/* Summary header */}
+                <div className="flex gap-2">
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Bot className="h-3 w-3 text-primary" />
+                  </div>
+                  <div className="flex-1 rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed">
+                    <div className="mb-2 font-semibold text-fg">{summary.greeting}</div>
+
+                    {/* Report sections */}
+                    <div className="space-y-2">
+                      {summary.sections.map((s, i) => (
+                        <div key={i} className="rounded border border-border bg-white p-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-fg">{s.label}</div>
+                              <div className="mt-0.5 text-[11px] text-fg">{s.text}</div>
+                            </div>
+                            <button
+                              onClick={() => handleLinkClick(s.link)}
+                              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10 transition-colors"
+                            >
+                              {s.linkLabel}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Attention items */}
+                    <div className="mt-3">
+                      <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Needs Attention</div>
+                      <div className="space-y-1.5">
+                        {summary.attentionItems.map((item, i) => (
+                          <div key={i} className={cn(
+                            'flex items-start gap-2 rounded border p-2',
+                            item.severity === 'info' && 'border-blue-200 bg-blue-50/50',
+                            item.severity === 'warning' && 'border-amber-200 bg-amber-50/50',
+                            item.severity === 'action' && 'border-purple-200 bg-purple-50/50',
+                          )}>
+                            <div className={cn(
+                              'mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full',
+                              item.severity === 'info' && 'bg-blue-500',
+                              item.severity === 'warning' && 'bg-amber-500',
+                              item.severity === 'action' && 'bg-purple-500',
+                            )} />
+                            <div className="flex-1 text-[11px]">{item.text}</div>
+                            <button
+                              onClick={() => handleLinkClick(item.link)}
+                              className={cn(
+                                'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors',
+                                item.severity === 'info' && 'text-blue-700 hover:bg-blue-100',
+                                item.severity === 'warning' && 'text-amber-700 hover:bg-amber-100',
+                                item.severity === 'action' && 'text-purple-700 hover:bg-purple-100',
+                              )}
+                            >
+                              {item.linkLabel}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 border-t border-border pt-2 text-[10px] text-muted-fg">
+                      Ask me to revise any section, explain a finding, run a comp search, or generate the report.
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
+
+            {/* Conversation messages */}
             <ul className="space-y-2">
               {messages.map((m) => (
                 <li key={m.id} className={cn('flex gap-2', m.role === 'user' ? 'justify-end' : 'justify-start')}>
